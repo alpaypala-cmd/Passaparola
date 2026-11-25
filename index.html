@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Passaparola TV Studio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root { --ring-size: 260px; --node-size: 28px; --cam-size: 140px; }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -99,7 +99,7 @@
         <div class="brand-badge">P</div>
         <div>
           <div class="brand-title">PASSAPAROLA TV STUDIO</div>
-          <div class="brand-sub" id="activeCountLabel">23 Aktif Harf</div>
+          <div class="brand-sub" id="activeCountLabel">23 Aktif Harf • v3</div>
         </div>
       </div>
       <div class="top-actions">
@@ -187,7 +187,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "passaparola_teacher_23_compact_v1";
+    const STORAGE_KEY = "passaparola_teacher_23_v3";
     const DEFAULT_ITEMS = [
       { letter: "A", q: "Öğretmenden olanının iyi olduğuna inanılan şey?", a: "Araba", active: true },
       { letter: "B", q: "Herkesin favori dersi", a: "Beden eğitimi", active: true },
@@ -324,7 +324,7 @@
       const active = getActiveItems();
       if (!active.length) {
         currentIndex = 0;
-        $("activeCountLabel").textContent = "0 Aktif Harf";
+        $("activeCountLabel").textContent = "0 Aktif Harf • v3";
         $("activeLetterBadge").textContent = "-";
         $("questionIndexLabel").textContent = "Harf Seçilmedi";
         $("questionText").textContent = "Harf / Soru menüsünden en az bir harfi aktif yapın.";
@@ -334,7 +334,7 @@
       }
       currentIndex = ((currentIndex % active.length) + active.length) % active.length;
       const cur = active[currentIndex];
-      $("activeCountLabel").textContent = `${active.length} Aktif Harf`;
+      $("activeCountLabel").textContent = `${active.length} Aktif Harf • v3`;
       $("activeLetterBadge").textContent = cur.letter;
       $("questionIndexLabel").textContent = `Soru ${currentIndex + 1} / ${active.length}`;
       $("questionText").textContent = cur.q || "(Soru girilmemiş)";
@@ -596,4 +596,3 @@
   </script>
 </body>
 </html>
-<!-- KOD BURADA BİTER -->
