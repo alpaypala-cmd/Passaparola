@@ -22,7 +22,6 @@
     .icon-btn { height: 27px; padding: 0 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #f8fafc; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
     .icon-btn.accent { background: rgba(59,130,246,0.34); border-color: rgba(96,165,250,0.6); color: #dbeafe; }
 
-    /* Belirgin Süre + Skor Şeridi */
     .stats-strip { display: grid; grid-template-columns: 1.75fr 1fr 1fr 1fr; gap: 4px; flex-shrink: 0; }
     .stat-box { border-radius: 10px; padding: 3px 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .stat-box.timer-box { background: linear-gradient(135deg, rgba(245,158,11,0.24), rgba(15,23,42,0.94)); border: 2px solid #fbbf24; box-shadow: 0 0 14px rgba(251,191,36,0.35); flex-direction: row; gap: 6px; padding: 3px 8px; }
@@ -34,16 +33,23 @@
     .stat-label { font-size: 8px; font-weight: 800; color: #cbd5e1; letter-spacing: 0.3px; }
     .stat-val { font-size: 15px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
 
-    /* Geniş Kamera & Okunaklı Harf Çemberi */
     .stage-zone { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .wheel-assembly { position: relative; width: var(--ring-size); height: var(--ring-size); display: flex; align-items: center; justify-content: center; }
     .center-cam-wrap { position: relative; width: var(--cam-size); height: var(--cam-size); border-radius: 50%; overflow: hidden; border: 3px solid #fbbf24; box-shadow: 0 0 28px rgba(56,189,248,0.42), inset 0 0 12px rgba(0,0,0,0.6); background: radial-gradient(circle at 30% 25%, #1e293b, #090d16 78%); z-index: 2; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    #contestantVideo { width: 100%; height: 100%; object-fit: cover; display: none; }
+    #contestantVideo { width: 100%; height: 100%; object-fit: cover; display: none; transform-origin: center center; transition: transform 0.12s ease-out; }
     #contestantVideo.active { display: block; }
-    #contestantVideo.mirrored { transform: scaleX(-1); }
     .cam-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #e2e8f0; text-align: center; padding: 10px; }
     .cam-placeholder i { font-size: 32px; color: #fbbf24; }
     .cam-placeholder span { font-size: 12px; font-weight: 800; line-height: 1.25; }
+
+    /* Köşelerde yer kaplamayan Zoom Kontrolleri */
+    .zoom-ctrl { position: absolute; z-index: 12; border: 1px solid rgba(255,255,255,0.28); background: rgba(15,23,42,0.82); color: #f8fafc; backdrop-filter: blur(8px); font-weight: 900; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+    .zoom-ctrl:active { transform: scale(0.92); }
+    .zoom-btn { width: 38px; height: 38px; border-radius: 50%; font-size: 16px; bottom: 4px; }
+    #zoomOutBtn { left: 4px; }
+    #zoomInBtn { right: 4px; }
+    #zoomBadge { top: 4px; right: 4px; padding: 4px 9px; border-radius: 999px; font-size: 11px; color: #fde047; border-color: rgba(251,191,36,0.55); gap: 4px; }
+
     .letter-node { position: absolute; left: 50%; top: 50%; width: var(--node-size); height: var(--node-size); margin-left: calc(var(--node-size) / -2); margin-top: calc(var(--node-size) / -2); border-radius: 50%; border: 2px solid rgba(255,255,255,0.85); background: linear-gradient(145deg, #2563eb, #1e3a8a); color: #ffffff; font-weight: 900; font-size: calc(var(--node-size) * 0.56); line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.9); display: grid; place-items: center; cursor: pointer; z-index: 5; box-shadow: 0 3px 10px rgba(0,0,0,0.65); transition: transform 0.14s ease, background 0.14s ease; }
     .letter-node.current { background: linear-gradient(135deg, #fef08a, #f59e0b); color: #090d16; text-shadow: none; border: 2.5px solid #ffffff; z-index: 8; box-shadow: 0 0 18px rgba(251,191,36,1); }
     .letter-node.correct { background: linear-gradient(135deg, #34d399, #059669); border-color: #ecfdf5; color: #022c22; text-shadow: none; }
@@ -78,7 +84,7 @@
     .sub-btn.rec.recording { animation: pulseRec 1.1s infinite; }
     @keyframes pulseRec { 0%,100% { box-shadow: 0 0 0 0 rgba(225,29,72,0.7); } 50% { box-shadow: 0 0 0 7px rgba(225,29,72,0); } }
 
-    body.clean-hud .top-bar, body.clean-hud .stats-strip, body.clean-hud .decision-grid, body.clean-hud .bottom-controls { display: none !important; }
+    body.clean-hud .top-bar, body.clean-hud .stats-strip, body.clean-hud .decision-grid, body.clean-hud .bottom-controls, body.clean-hud .zoom-ctrl { display: none !important; }
     .restore-hud-btn, .hud-timer-float { display: none; position: fixed; top: max(10px, env(safe-area-inset-top)); z-index: 40; border-radius: 999px; font-weight: 900; align-items: center; gap: 6px; }
     .restore-hud-btn { right: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(15,23,42,0.85); color: #fff; padding: 6px 11px; font-size: 11px; cursor: pointer; }
     .hud-timer-float { left: 10px; border: 2px solid #fbbf24; background: rgba(15,23,42,0.88); color: #fde047; padding: 5px 13px; font-size: 20px; font-variant-numeric: tabular-nums; }
@@ -117,7 +123,7 @@
         <div class="brand-badge">P</div>
         <div>
           <div class="brand-title">PASSAPAROLA TV STUDIO</div>
-          <div class="brand-sub" id="activeCountLabel">23 Aktif Harf • v5</div>
+          <div class="brand-sub" id="activeCountLabel">23 Aktif Harf • v6</div>
         </div>
       </div>
       <div class="top-actions">
@@ -138,9 +144,12 @@
     </section>
 
     <main class="stage-zone" id="stageZone">
+      <button id="zoomBadge" class="zoom-ctrl" type="button" title="Yakınlaştırmayı Sıfırla"><i class="fa-solid fa-magnifying-glass"></i><span id="zoomBadgeText">1.4x</span></button>
+      <button id="zoomOutBtn" class="zoom-ctrl zoom-btn" type="button" title="Uzaklaştır"><i class="fa-solid fa-minus"></i></button>
+      <button id="zoomInBtn" class="zoom-ctrl zoom-btn" type="button" title="Yakınlaştır"><i class="fa-solid fa-plus"></i></button>
       <div class="wheel-assembly" id="wheelAssembly">
         <div class="center-cam-wrap" id="centerCamWrap">
-          <video id="contestantVideo" autoplay playsinline muted class="mirrored"></video>
+          <video id="contestantVideo" autoplay playsinline muted></video>
           <div class="cam-placeholder" id="camPlaceholder"><i class="fa-solid fa-video"></i><span>Kamerayı Açmak İçin<br/>Dokunun</span></div>
         </div>
       </div>
@@ -208,7 +217,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "passaparola_teacher_23_v5";
+    const STORAGE_KEY = "passaparola_teacher_23_v6";
+    const ZOOM_KEY = "passaparola_cam_zoom_v6";
     const DEFAULT_ITEMS = [
       { letter: "A", q: "Öğretmenden olanının iyi olduğuna inanılan şey?", a: "Araba", active: true },
       { letter: "B", q: "Herkesin favori dersi", a: "Beden eğitimi", active: true },
@@ -244,20 +254,36 @@
     const cloneDefaults = () => DEFAULT_ITEMS.map(d => ({ ...d }));
     function loadQuestions() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("passaparola_teacher_23_v5");
         const p = raw ? JSON.parse(raw) : null;
         if (Array.isArray(p) && p.length === DEFAULT_ITEMS.length) return p;
       } catch (e) {}
       return cloneDefaults();
     }
     const saveQuestions = (d) => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch (e) {} };
+    function loadZoom() {
+      try {
+        const v = parseFloat(localStorage.getItem(ZOOM_KEY));
+        if (!isNaN(v) && v >= 1.0 && v <= 3.0) return v;
+      } catch (e) {}
+      return 1.4;
+    }
 
     let items = loadQuestions(), statuses = {}, currentIndex = 0, answerVisible = false, timeLeft = 120, gameRunning = false, timerInterval = null;
-    let camStream = null, micOnlyStream = null, useFrontCam = true, wantCamera = false, isRestartingCam = false, lastVideoTime = -1, stallHits = 0, wakeLock = null;
+    let camStream = null, micOnlyStream = null, useFrontCam = true, camZoom = loadZoom();
+    let wantCamera = false, isRestartingCam = false, isRestartingMic = false, lastVideoTime = -1, stallHits = 0, wakeLock = null;
     let audioCtx = null, masterGain = null, recordAudioDest = null, micSourceNode = null, keepAliveStarted = false;
     let mediaRecorder = null, recordedChunks = [], lastVideoBlob = null, lastVideoUrl = null, lastVideoMime = "video/webm";
 
+    /* Bildirim anında kamera yeniden bağlanırken siyah ekrana düşmemesi için son kare önbelleği */
+    const lastCamCanvas = document.createElement("canvas");
+    lastCamCanvas.width = 600; lastCamCanvas.height = 600;
+    const lastCamCtx = lastCamCanvas.getContext("2d");
+    let hasLastCamFrame = false;
+
     const $ = (id) => document.getElementById(id);
+    const videoEl = $("contestantVideo");
+
     function showToast(msg) {
       const t = $("toast");
       t.textContent = msg;
@@ -265,6 +291,17 @@
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => t.classList.remove("show"), 2200);
     }
+
+    function applyZoom(save = true) {
+      camZoom = Math.max(1.0, Math.min(3.0, Math.round(camZoom * 10) / 10));
+      videoEl.style.transform = `scaleX(${useFrontCam ? -1 : 1}) scale(${camZoom})`;
+      $("zoomBadgeText").textContent = camZoom.toFixed(1) + "x";
+      if (save) { try { localStorage.setItem(ZOOM_KEY, String(camZoom)); } catch (e) {} }
+    }
+
+    $("zoomInBtn").onclick = (e) => { e.stopPropagation(); camZoom += 0.2; applyZoom(); };
+    $("zoomOutBtn").onclick = (e) => { e.stopPropagation(); camZoom -= 0.2; applyZoom(); };
+    $("zoomBadge").onclick = (e) => { e.stopPropagation(); camZoom = 1.0; applyZoom(); showToast("Yakınlaştırma sıfırlandı (1.0x)"); };
 
     async function requestWakeLock() {
       try {
@@ -275,15 +312,41 @@
       } catch (e) {}
     }
 
+    function getLiveAudioTrack() {
+      for (const s of [micOnlyStream, camStream]) {
+        if (!s) continue;
+        const t = s.getAudioTracks()[0];
+        if (t && t.readyState === "live") return t;
+      }
+      return null;
+    }
+
     function connectMicToMixer() {
       if (!audioCtx || !recordAudioDest) return;
-      const s = camStream || micOnlyStream;
-      if (!s || !s.getAudioTracks().length) return;
+      const track = getLiveAudioTrack();
+      if (!track) return;
       if (micSourceNode) { try { micSourceNode.disconnect(); } catch (e) {} micSourceNode = null; }
       try {
-        micSourceNode = audioCtx.createMediaStreamSource(new MediaStream([s.getAudioTracks()[0]]));
+        micSourceNode = audioCtx.createMediaStreamSource(new MediaStream([track]));
         micSourceNode.connect(recordAudioDest);
+        track.onended = () => { recoverMicIfNeeded(); };
       } catch (e) {}
+    }
+
+    async function recoverMicIfNeeded() {
+      if (isRestartingMic || document.hidden) return;
+      const isRec = mediaRecorder && mediaRecorder.state === "recording";
+      if (!isRec && !wantCamera) return;
+      if (getLiveAudioTrack()) return;
+      isRestartingMic = true;
+      try {
+        if (micOnlyStream) { micOnlyStream.getTracks().forEach(t => t.stop()); micOnlyStream = null; }
+        micOnlyStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        ensureAudioMixer();
+        connectMicToMixer();
+      } catch (e) {} finally {
+        isRestartingMic = false;
+      }
     }
 
     function ensureAudioMixer() {
@@ -292,6 +355,9 @@
           const Ctx = window.AudioContext || window.webkitAudioContext;
           if (!Ctx) return null;
           audioCtx = new Ctx();
+          audioCtx.onstatechange = () => {
+            if (audioCtx && audioCtx.state !== "running") audioCtx.resume().catch(() => {});
+          };
           masterGain = audioCtx.createGain();
           masterGain.gain.value = 0.9;
           masterGain.connect(audioCtx.destination);
@@ -306,7 +372,7 @@
             }
           }
         }
-        if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+        if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
         if (!micSourceNode) connectMicToMixer();
         return audioCtx;
       } catch (e) { return null; }
@@ -369,7 +435,7 @@
       const active = getActiveItems();
       if (!active.length) {
         currentIndex = 0;
-        $("activeCountLabel").textContent = "0 Aktif Harf • v5";
+        $("activeCountLabel").textContent = "0 Aktif Harf • v6";
         $("activeLetterBadge").textContent = "-";
         $("questionIndexLabel").textContent = "Harf Seçilmedi";
         $("questionText").textContent = "Harf / Soru menüsünden en az bir harfi aktif yapın.";
@@ -380,7 +446,7 @@
       }
       currentIndex = ((currentIndex % active.length) + active.length) % active.length;
       const cur = active[currentIndex];
-      $("activeCountLabel").textContent = `${active.length} Aktif Harf • v5`;
+      $("activeCountLabel").textContent = `${active.length} Aktif Harf • v6`;
       $("activeLetterBadge").textContent = cur.letter;
       $("questionIndexLabel").textContent = `Soru ${currentIndex + 1} / ${active.length}`;
       $("questionText").textContent = cur.q || "(Soru girilmemiş)";
@@ -438,11 +504,10 @@
     };
     $("resetGameBtn").onclick = () => { stopGame(); statuses = {}; currentIndex = 0; answerVisible = false; timeLeft = 120; renderAll(); showToast("Oyun sıfırlandı"); };
 
-    const videoEl = $("contestantVideo");
     function stopCamera(userInitiated = true) {
-      if (userInitiated) wantCamera = false;
+      if (userInitiated) { wantCamera = false; hasLastCamFrame = false; }
       if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-      if (micSourceNode) { try { micSourceNode.disconnect(); } catch (e) {} micSourceNode = null; }
+      if (userInitiated && micSourceNode && !micOnlyStream) { try { micSourceNode.disconnect(); } catch (e) {} micSourceNode = null; }
       videoEl.srcObject = null; videoEl.classList.remove("active");
       $("camPlaceholder").style.display = "flex";
       $("toggleCamBtn").innerHTML = `<i class="fa-solid fa-camera"></i> Kamera Aç`;
@@ -455,18 +520,18 @@
       stopCamera(false);
       try {
         camStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: useFrontCam ? "user" : "environment", width: { ideal: 720 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } },
+          video: { facingMode: useFrontCam ? "user" : "environment", width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 25, max: 30 } },
           audio: { echoCancellation: true, noiseSuppression: true }
         });
         videoEl.srcObject = camStream;
         videoEl.classList.add("active");
-        videoEl.classList.toggle("mirrored", useFrontCam);
+        applyZoom(false);
         await videoEl.play().catch(() => {});
         $("camPlaceholder").style.display = "none";
         $("toggleCamBtn").innerHTML = `<i class="fa-solid fa-video-slash"></i> Kapat`;
         lastVideoTime = -1; stallHits = 0;
         const vt = camStream.getVideoTracks()[0];
-        if (vt) vt.onended = () => { if (wantCamera && !document.hidden) setTimeout(() => startCamera(true), 400); };
+        if (vt) vt.onended = () => { if (wantCamera && !document.hidden) setTimeout(() => startCamera(true), 300); };
         ensureAudioMixer();
         connectMicToMixer();
         requestWakeLock();
@@ -478,9 +543,12 @@
       }
     }
 
-    /* Bildirim veya ses odağı kesintisinde donan kamerayı otomatik canlandırır */
-    function recoverCameraIfNeeded() {
-      if (!wantCamera || document.hidden || isRestartingCam) return;
+    /* Bildirim geldiğinde kamera ve sesi kaydı kesmeden otomatik canlandırır */
+    function recoverMediaIfNeeded() {
+      if (document.hidden) return;
+      if (audioCtx && audioCtx.state !== "running") audioCtx.resume().catch(() => {});
+      recoverMicIfNeeded();
+      if (!wantCamera || isRestartingCam) return;
       const vt = camStream ? camStream.getVideoTracks()[0] : null;
       if (!camStream || !vt || vt.readyState === "ended") {
         startCamera(true);
@@ -493,26 +561,31 @@
       if (videoEl.readyState >= 2) {
         if (videoEl.currentTime === lastVideoTime) {
           stallHits++;
-          if (stallHits >= 2) { stallHits = 0; startCamera(true); }
+          if (stallHits >= 3) { stallHits = 0; startCamera(true); }
         } else {
           lastVideoTime = videoEl.currentTime;
           stallHits = 0;
         }
       }
     }
-    setInterval(recoverCameraIfNeeded, 1500);
-    videoEl.addEventListener("pause", () => { if (wantCamera && !document.hidden) setTimeout(() => videoEl.play().catch(() => {}), 250); });
+    setInterval(recoverMediaIfNeeded, 800);
+    ["pause", "stalled", "suspend"].forEach(ev => {
+      videoEl.addEventListener(ev, () => {
+        if (wantCamera && !document.hidden) setTimeout(() => videoEl.play().catch(() => {}), 150);
+      });
+    });
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
-        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
-        if (wantCamera) { requestWakeLock(); setTimeout(recoverCameraIfNeeded, 300); }
+        if (audioCtx && audioCtx.state !== "running") audioCtx.resume().catch(() => {});
+        if (wantCamera) requestWakeLock();
+        setTimeout(recoverMediaIfNeeded, 200);
       }
     });
-    window.addEventListener("focus", () => { if (wantCamera) setTimeout(recoverCameraIfNeeded, 300); });
+    window.addEventListener("focus", () => setTimeout(recoverMediaIfNeeded, 200));
 
     $("toggleCamBtn").onclick = () => camStream ? stopCamera(true) : startCamera(false);
     $("centerCamWrap").onclick = () => { if (!camStream) startCamera(false); else { useFrontCam = !useFrontCam; startCamera(false); } };
-    $("flipCamBtn").onclick = () => { useFrontCam = !useFrontCam; if (camStream) startCamera(false); else showToast(useFrontCam ? "Ön kamera seçildi" : "Arka kamera seçildi"); };
+    $("flipCamBtn").onclick = () => { useFrontCam = !useFrontCam; if (camStream) startCamera(false); else { applyZoom(false); showToast(useFrontCam ? "Ön kamera seçildi" : "Arka kamera seçildi"); } };
 
     const toggleClean = () => { document.body.classList.toggle("clean-hud"); setTimeout(layoutWheel, 60); };
     $("cleanBtn").onclick = toggleClean;
@@ -540,7 +613,6 @@
       let ok = 0, no = 0, ps = 0;
       active.forEach(it => { if (statuses[it.letter] === "correct") ok++; else if (statuses[it.letter] === "wrong") no++; else if (statuses[it.letter] === "passed") ps++; });
 
-      /* Üst Süre ve Skor Çubuğu */
       ctx.fillStyle = "rgba(10,16,32,0.88)"; ctx.strokeStyle = timeLeft <= 15 ? "#ef4444" : "#fbbf24"; ctx.lineWidth = 3;
       ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(24, 24, 230, 82, 18); else ctx.rect(24, 24, 230, 82); ctx.fill(); ctx.stroke();
       ctx.fillStyle = timeLeft <= 15 ? "#fca5a5" : "#fde047"; ctx.font = "900 44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -553,13 +625,23 @@
       ctx.fillStyle = "#f87171"; ctx.fillText(`Y:${no}`, 485, 66);
       ctx.fillStyle = "#fb923c"; ctx.fillText(`P:${ps}`, 620, 66);
 
-      /* Büyük Kamera Çemberi ve Okunaklı Harfler */
       const cx = w / 2, cy = 530, rR = 318, cR = 282;
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, cR, 0, Math.PI * 2); ctx.clip();
-      if (camStream && videoEl.readyState >= 2) {
-        ctx.save(); ctx.translate(cx, cy); if (useFrontCam) ctx.scale(-1, 1);
-        const vw = videoEl.videoWidth || 640, vh = videoEl.videoHeight || 480, sc = Math.max((cR * 2) / vw, (cR * 2) / vh);
-        ctx.drawImage(videoEl, -(vw * sc) / 2, -(vh * sc) / 2, vw * sc, vh * sc); ctx.restore();
+
+      if (camStream && videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+        const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+        const lsc = Math.max(600 / vw, 600 / vh) * camZoom;
+        lastCamCtx.save();
+        lastCamCtx.clearRect(0, 0, 600, 600);
+        lastCamCtx.translate(300, 300);
+        if (useFrontCam) lastCamCtx.scale(-1, 1);
+        lastCamCtx.drawImage(videoEl, -(vw * lsc) / 2, -(vh * lsc) / 2, vw * lsc, vh * lsc);
+        lastCamCtx.restore();
+        hasLastCamFrame = true;
+      }
+
+      if (hasLastCamFrame && wantCamera) {
+        ctx.drawImage(lastCamCanvas, cx - cR, cy - cR, cR * 2, cR * 2);
       } else {
         ctx.fillStyle = "#0f172a"; ctx.fillRect(cx - cR, cy - cR, cR * 2, cR * 2);
         ctx.fillStyle = "#fbbf24"; ctx.font = "bold 44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("TV STÜDYO", cx, cy);
@@ -605,7 +687,6 @@
     }
     requestAnimationFrame(loop);
 
-    /* Telefonda ses kodeki hatası vermeyen format seçici (MP4 için yalnızca AAC, yoksa WebM) */
     function pickSafeMime() {
       if (!window.MediaRecorder) return "";
       const list = [
@@ -631,7 +712,7 @@
         return;
       }
       if (!window.MediaRecorder || !recCanvas.captureStream) { showToast("Tarayıcı kaydı desteklemiyor"); return; }
-      if (!camStream && !micOnlyStream && navigator.mediaDevices) {
+      if (!getLiveAudioTrack() && navigator.mediaDevices) {
         try { micOnlyStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) {}
       }
       ensureAudioMixer();
@@ -741,6 +822,7 @@
     window.addEventListener("keydown", (e) => { if (!["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && e.key.toLowerCase() === "h") toggleClean(); });
     if (window.ResizeObserver) new ResizeObserver(layoutWheel).observe($("stageZone"));
     window.addEventListener("resize", layoutWheel);
+    applyZoom(false);
     renderAll();
   </script>
 </body>
