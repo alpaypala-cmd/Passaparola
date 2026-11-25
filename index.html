@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Passaparola TV Studio — Öğretmen Harf Çemberi</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #070b16;
+      --panel-bg: rgba(13, 20, 38, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --gold: #f59e0b;
+      --gold-bright: #fbbf24;
+      --ring-size: 240px;
+      --node-size: 26px;
+      --cam-size: 130px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #studioCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: max(6px, env(safe-area-inset-top)) 10px max(64px, calc(env(safe-area-inset-bottom) + 60px));
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 5px 8px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .brand-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--gold), #d97706);
+      color: #090d16;
+      font-weight: 900;
+      font-size: 13px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .brand-text-wrap {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .brand-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      color: var(--gold-bright);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      height: 28px;
+      padding: 0 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      font-size: 10.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .icon-btn.accent {
+      background: rgba(59, 130, 246, 0.3);
+      border-color: rgba(96, 165, 250, 0.55);
+      color: #dbeafe;
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .stat-box {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(10px);
+      border-radius: 9px;
+      padding: 2px 4px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+    }
+
+    .stat-val {
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .stat-val.time { color: var(--gold-bright); }
+    .stat-val.ok { color: #34d399; }
+    .stat-val.no { color: #f87171; }
+    .stat-val.ps { color: #fb923c; }
+
+    /* Esnek orta sahne: alt butonları asla sıkıştırmaz */
+    .stage-zone {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .wheel-assembly {
+      position: relative;
+      width: var(--ring-size);
+      height: var(--ring-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .center-cam-wrap {
+      position: relative;
+      width: var(--cam-size);
+      height: var(--cam-size);
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(251, 191, 36, 0.9);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.35), inset 0 0 16px rgba(0, 0, 0, 0.72);
+      background: radial-gradient(circle at 30% 25%, #1e293b, #090d16 78%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #contestantVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #contestantVideo.active {
+      display: block;
+    }
+
+    #contestantVideo.mirrored {
+      transform: scaleX(-1);
+    }
+
+    .cam-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 6px;
+    }
+
+    .cam-placeholder i {
+      font-size: 20px;
+      color: var(--gold-bright);
+    }
+
+    .cam-placeholder span {
+      font-size: 9.5px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .letter-node {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--node-size);
+      height: var(--node-size);
+      margin-left: calc(var(--node-size) / -2);
+      margin-top: calc(var(--node-size) / -2);
+      border-radius: 50%;
+      border: 2px solid rgba(147, 197, 253, 0.65);
+      background: linear-gradient(145deg, #1d4ed8, #1e3a8a);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: calc(var(--node-size) * 0.44);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      z-index: 4;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+
+    .letter-node.current {
+      background: linear-gradient(135deg, #fde047, #f59e0b);
+      color: #090d16;
+      border-color: #ffffff;
+      z-index: 6;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.95);
+    }
+
+    .letter-node.correct {
+      background: linear-gradient(135deg, #34d399, #059669);
+      border-color: #a7f3d0;
+      color: #042f2e;
+    }
+
+    .letter-node.wrong {
+      background: linear-gradient(135deg, #f87171, #dc2626);
+      border-color: #fecaca;
+      color: #ffffff;
+    }
+
+    .letter-node.passed {
+      background: linear-gradient(135deg, #fb923c, #ea580c);
+      border-color: #fed7aa;
+      color: #fff7ed;
+    }
+
+    .qa-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(14px);
+      border-radius: 12px;
+      padding: 6px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .qa-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .active-letter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gold-bright);
+    }
+
+    .letter-pill {
+      width: 21px;
+      height: 21px;
+      border-radius: 6px;
+      background: var(--gold);
+      color: #090d16;
+      font-weight: 900;
+      font-size: 12px;
+      display: grid;
+      place-items: center;
+    }
+
+    .qa-nav-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mini-nav-btn {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 10.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .toggle-ans-btn {
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      background: rgba(245, 158, 11, 0.16);
+      color: #fde68a;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .question-text {
+      font-size: 12.5px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #f8fafc;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+    }
+
+    .answer-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      font-size: 11px;
+    }
+
+    .answer-lbl {
+      font-weight: 800;
+      color: #6ee7b7;
+      flex-shrink: 0;
+    }
+
+    .answer-val {
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .answer-val.hidden-ans {
+      filter: blur(6px);
+      opacity: 0.45;
+    }
+
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .dec-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 7px 4px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .dec-btn:active { transform: scale(0.96); }
+    .dec-btn.ok { background: linear-gradient(135deg, #10b981, #047857); }
+    .dec-btn.no { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .dec-btn.ps { background: linear-gradient(135deg, #f97316, #c2410c); }
+
+    .bottom-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .ctrl-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .sub-btn {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(15, 23, 42, 0.92);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 6px 3px;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .sub-btn:active { transform: scale(0.96); }
+
+    .sub-btn.start {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #090d16;
+      border-color: transparent;
+    }
+
+    .sub-btn.rec {
+      background: linear-gradient(135deg, #e11d48, #9f1239);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    .sub-btn.rec.recording {
+      animation: pulseRec 1.1s infinite;
+    }
+
+    @keyframes pulseRec {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+      50% { box-shadow: 0 0 0 7px rgba(225, 29, 72, 0); }
+    }
+
+    body.clean-hud .top-bar,
+    body.clean-hud .stats-strip,
+    body.clean-hud .decision-grid,
+    body.clean-hud .bottom-controls {
+      display: none !important;
+    }
+
+    body.clean-hud .qa-panel {
+      background: rgba(7, 11, 22, 0.78);
+      border-color: rgba(251, 191, 36, 0.45);
+      padding: 9px 12px;
+    }
+
+    .restore-hud-btn {
+      display: none;
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      right: 10px;
+      z-index: 40;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(15, 23, 42, 0.85);
+      color: #ffffff;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    body.clean-hud .restore-hud-btn {
+      display: inline-flex;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(2, 6, 23, 0.86);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 640px;
+      max-height: 84dvh;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(30, 41, 59, 0.65);
+    }
+
+    .modal-head h3 {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .close-x {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .editor-item {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 11px;
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .editor-item.disabled-letter {
+      opacity: 0.55;
+    }
+
+    .editor-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .editor-letter {
+      font-weight: 900;
+      color: var(--gold-bright);
+      font-size: 13px;
+    }
+
+    .check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal-input, .modal-textarea {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: #090d16;
+      color: #f8fafc;
+      padding: 7px 9px;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .modal-textarea {
+      min-height: 48px;
+      resize: vertical;
+    }
+
+    .modal-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 10px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(15, 23, 42, 0.95);
+      justify-content: flex-end;
+    }
+
+    .act-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #ffffff;
+    }
+
+    .act-btn.primary { background: #2563eb; }
+    .act-btn.success { background: #059669; }
+    .act-btn.warn { background: #d97706; color: #090d16; }
+    .act-btn.muted { background: #475569; }
+
+    #previewVideo {
+      width: 100%;
+      max-height: 40dvh;
+      border-radius: 10px;
+      background: #000000;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 125px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 80;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(251, 191, 36, 0.55);
+      color: #fef3c7;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="studioCanvas"></canvas>
+
+  <button id="restoreHudBtn" class="restore-hud-btn" type="button" title="Kontrolleri Göster (H)">
+    <i class="fa-solid fa-eye"></i> Kontrolleri Aç
+  </button>
+
+  <div class="app-shell" id="appShell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-badge">P</div>
+        <div class="brand-text-wrap">
+          <div class="brand-title">PASSAPAROLA TV STUDIO</div>
+          <div class="brand-sub" id="activeCountLabel">23 Aktif Harf</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="editBtn" class="icon-btn accent" type="button">
+          <i class="fa-solid fa-pen-to-square"></i> Harf / Soru
+        </button>
+        <button id="pdfBtn" class="icon-btn" type="button">
+          <i class="fa-solid fa-file-pdf"></i> PDF
+        </button>
+        <button id="cleanBtn" class="icon-btn" type="button" title="Temiz Ekran (H)">
+          <i class="fa-solid fa-eye-slash"></i>
+        </button>
+      </div>
+    </header>
+
+    <section class="stats-strip">
+      <div class="stat-box">
+        <div class="stat-label">KALAN SÜRE</div>
+        <div class="stat-val time" id="timerVal">120</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">DOĞRU</div>
+        <div class="stat-val ok" id="correctVal">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">YANLIŞ</div>
+        <div class="stat-val no" id="wrongVal">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">PAS</div>
+        <div class="stat-val ps" id="passVal">0</div>
+      </div>
+    </section>
+
+    <main class="stage-zone" id="stageZone">
+      <div class="wheel-assembly" id="wheelAssembly">
+        <div class="center-cam-wrap" id="centerCamWrap" title="Kamerayı Aç / Değiştir">
+          <video id="contestantVideo" autoplay playsinline muted class="mirrored"></video>
+          <div class="cam-placeholder" id="camPlaceholder">
+            <i class="fa-solid fa-video"></i>
+            <span>Kamerayı Açmak İçin<br/>Dokunun</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section class="qa-panel">
+      <div class="qa-top">
+        <div class="active-letter-tag">
+          <span class="letter-pill" id="activeLetterBadge">A</span>
+          <span id="questionIndexLabel">Soru 1 / 23</span>
+        </div>
+        <div class="qa-nav-group">
+          <button id="prevStepBtn" class="mini-nav-btn" type="button" title="Önceki Harf">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button id="nextStepBtn" class="mini-nav-btn" type="button" title="Sonraki Harf">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button id="toggleAnswerBtn" class="toggle-ans-btn" type="button">
+            <i class="fa-solid fa-eye" id="ansEyeIcon"></i>
+            <span id="ansToggleText">Cevabı Göster</span>
+          </button>
+        </div>
+      </div>
+      <div class="question-text" id="questionText">Öğretmenden olanının iyi olduğuna inanılan şey?</div>
+      <div class="answer-row">
+        <span class="answer-lbl">CEVAP:</span>
+        <span class="answer-val hidden-ans" id="answerText">Araba</span>
+      </div>
+    </section>
+
+    <section class="decision-grid">
+      <button id="correctBtn" class="dec-btn ok" type="button">
+        <i class="fa-solid fa-check"></i> DOĞRU
+      </button>
+      <button id="wrongBtn" class="dec-btn no" type="button">
+        <i class="fa-solid fa-xmark"></i> YANLIŞ
+      </button>
+      <button id="passBtn" class="dec-btn ps" type="button">
+        <i class="fa-solid fa-forward"></i> PAS
+      </button>
+    </section>
+
+    <footer class="bottom-controls">
+      <div class="ctrl-row">
+        <button id="startStopGameBtn" class="sub-btn start" type="button">
+          <i class="fa-solid fa-play"></i> Başlat
+        </button>
+        <button id="resetGameBtn" class="sub-btn" type="button">
+          <i class="fa-solid fa-rotate-left"></i> Sıfırla
+        </button>
+        <button id="toggleCamBtn" class="sub-btn" type="button">
+          <i class="fa-solid fa-camera"></i> Kamera Aç
+        </button>
+        <button id="flipCamBtn" class="sub-btn" type="button">
+          <i class="fa-solid fa-arrows-rotate"></i> Ön/Arka
+        </button>
+      </div>
+      <div class="ctrl-row" style="grid-template-columns: 1fr 1fr;">
+        <button id="recordBtn" class="sub-btn rec" type="button">
+          <i class="fa-solid fa-circle"></i> TV Kaydı Başlat
+        </button>
+        <button id="openPreviewBtn" class="sub-btn" type="button">
+          <i class="fa-solid fa-film"></i> Son Kaydı İndir
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-backdrop" id="editorModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-sliders"></i> Soruları Düzenle ve Harf Çıkar/Ekle</h3>
+        <button class="close-x" id="closeEditorBtn" type="button">&times;</button>
+      </div>
+      <div class="modal-body" id="editorList"></div>
+      <div class="modal-foot">
+        <button class="act-btn muted" id="resetDefaultQBtn" type="button">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Varsayılan 23 Soru
+        </button>
+        <button class="act-btn success" id="saveEditorBtn" type="button">
+          <i class="fa-solid fa-floppy-disk"></i> Kaydet ve Çarkı Güncelle
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="previewModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-clapperboard"></i> Kaydedilen TV Videosu</h3>
+        <button class="close-x" id="closePreviewBtn" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <video id="previewVideo" controls playsinline></video>
+        <div id="videoMetaInfo" style="font-size:11.5px; color:#cbd5e1;">Henüz kayıt alınmadı.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="act-btn primary" id="downloadVideoBtn" type="button">
+          <i class="fa-solid fa-download"></i> Cihaza İndir
+        </button>
+        <button class="act-btn success" id="shareVideoBtn" type="button">
+          <i class="fa-solid fa-share-nodes"></i> Galeri / Paylaş
+        </button>
+        <button class="act-btn warn" id="openTabVideoBtn" type="button">
+          <i class="fa-solid fa-up-right-from-square"></i> Yeni Sekmede Aç
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "passaparola_teacher_23_final_v14";
+
+      const DEFAULT_ITEMS = [
+        { letter: "A", q: "Öğretmenden olanının iyi olduğuna inanılan şey?", a: "Araba", active: true },
+        { letter: "B", q: "Herkesin favori dersi", a: "Beden eğitimi", active: true },
+        { letter: "C", q: "Hayatta bir amacı olmayan mutsuz insanların hezeyanları uğraşmaktan gerçek görevlerini yapamayan kurum", a: "CİMER", active: true },
+        { letter: "Ç", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "D", q: "Hiçbir zaman hiçbir yerde herkesi mutlu edemeyecek çizelge", a: "Ders programı", active: true },
+        { letter: "E", q: "Yokluğu öldürmeyen varlığı güldürmeyen çoğu zaman zamanında gelmeyen şey", a: "Ek ders", active: true },
+        { letter: "F", q: "Öğretmenleri okulda duyduklarında mutlu eden okul dışında duyduklarında mutsuz eden şey", a: "Fulledim hocam", active: true },
+        { letter: "G", q: "Öğretmenleri canından bezdiren evrak", a: "Gelişim raporu", active: true },
+        { letter: "Ğ", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "H", q: "Tam her şey yoluna girmişken bütün planları altüst eden şey", a: "Hizmetiçi Eğitim", active: true },
+        { letter: "I", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "İ", q: "Öğrenciler tarafından bütün öğretmenlerin bildiği düşünülen şey ama aslında öyle olmayan şey", a: "İmla noktalama", active: true },
+        { letter: "J", q: "Her gelen bir öncekinden daha kötüymüş izlenimi veren topluluk", a: "Jenerasyon", active: true },
+        { letter: "K", q: "Adı değişse de hayatımızdan bir türlü çıkmayan minik haylazlar", a: "Kazanım", active: true },
+        { letter: "L", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "M", q: "Öğretmen olmayanların dilinden düşürmediği ama öğretmenlerin elinden çabucak uçup giden halk efsanesi", a: "Maaş", active: true },
+        { letter: "N", q: "Öğretmenin bitmeyen çilesi evlat olsa sevilmeyeni", a: "Nöbet", active: true },
+        { letter: "O", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "Ö", q: "Öğrenciye bir şey öğretmenin önündeki en büyük engel", a: "Öğrenilmiş çaresizlik", active: true },
+        { letter: "P", q: "Öğretmeni canından bezdirmek için üretilmiş angarya bütünü", a: "Proje", active: true },
+        { letter: "R", q: "Öğrencilere yönelik olan ama aslında velilerin ihtiyaç duyduğu şey", a: "Rehberlik", active: true },
+        { letter: "S", q: "Öğretmenin elinde kalan tek özgürlüğü", a: "Sözlü notu", active: true },
+        { letter: "Ş", q: "Öğretmenliğin şanındandır", a: "Şikayet", active: true },
+        { letter: "T", q: "Müdürün öğretmenleri gaza getirmek için verdiği belge", a: "Teşekkür belgesi", active: true },
+        { letter: "U", q: "Disiplin kurulunda ceza veriyormuş gibi yapmak", a: "Uyarmak", active: true },
+        { letter: "Ü", q: "Çarkta kullanılmayan harf", a: "", active: false },
+        { letter: "V", q: "Öğrencilerin olumlu veya olumsuz davranışlarının gerçek olarak gözlemlenebilen an", a: "Veli toplantısı", active: true },
+        { letter: "Y", q: "Öğretmenlerin en çok yaptığı düşünülen eylem", a: "Yan gelip yatmak", active: true },
+        { letter: "Z", q: "Okulda bazen hemen duyulmak istenen bazen hiç duyulmak istenmeyen ses", a: "Zil", active: true }
+      ];
+
+      function cloneDefaults() {
+        return DEFAULT_ITEMS.map(d => ({ letter: d.letter, q: d.q, a: d.a, active: d.active }));
+      }
+
+      function loadQuestions() {
+        try {
+          const raw = window.localStorage ? localStorage.getItem(STORAGE_KEY) : null;
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length === DEFAULT_ITEMS.length) {
+              return parsed;
+            }
+          }
+        } catch (e) {}
+        return cloneDefaults();
+      }
+
+      function saveQuestions(data) {
+        try {
+          if (window.localStorage) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          }
+        } catch (e) {}
+      }
+
+      let items = loadQuestions();
+      let statuses = {};
+      let currentIndex = 0;
+      let answerVisible = false;
+      let timeLeft = 120;
+      let gameRunning = false;
+      let timerInterval = null;
+
+      let camStream = null;
+      let micOnlyStream = null;
+      let useFrontCam = true;
+
+      let audioCtx = null;
+      let masterGain = null;
+      let recordAudioDest = null;
+      let micSourceNode = null;
+      let keepAliveStarted = false;
+
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let lastVideoBlob = null;
+      let lastVideoUrl = null;
+      let lastVideoMime = "video/webm";
+
+      const toastEl = document.getElementById("toast");
+      function showToast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toastEl.classList.remove("show"), 2200);
+      }
+
+      function ensureAudioMixer() {
+        try {
+          if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            audioCtx = new Ctx();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.9;
+            masterGain.connect(audioCtx.destination);
+
+            if (audioCtx.createMediaStreamDestination) {
+              recordAudioDest = audioCtx.createMediaStreamDestination();
+              masterGain.connect(recordAudioDest);
+
+              if (!keepAliveStarted) {
+                keepAliveStarted = true;
+                const silentOsc = audioCtx.createOscillator();
+                const silentGain = audioCtx.createGain();
+                silentGain.gain.value = 0.00005;
+                silentOsc.connect(silentGain);
+                silentGain.connect(recordAudioDest);
+                silentOsc.start();
+              }
+            }
+          }
+          if (audioCtx.state === "suspended") {
+            audioCtx.resume().catch(() => {});
+          }
+          connectMicToMixer();
+          return audioCtx;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function connectMicToMixer() {
+        if (!audioCtx || !recordAudioDest || micSourceNode) return;
+        const activeStream = camStream || micOnlyStream;
+        if (!activeStream) return;
+        const audioTracks = activeStream.getAudioTracks();
+        if (audioTracks.length) {
+          try {
+            const micStream = new MediaStream([audioTracks[0]]);
+            micSourceNode = audioCtx.createMediaStreamSource(micStream);
+            
